@@ -14,6 +14,7 @@
 	"level.tleveling.legendary": "Legendary",
 	"level.tleveling.godlike": "Godlike",
 	"level.tleveling.awesome": "Awesome",
+	"level.tleveling.transcendent": "Transcendent",
 
 	"tooltip.tleveling.hold_alt": "Hold %s for experience",
 	"tooltip.tleveling.tool_level": "Tool Level: %s %s",
@@ -30,7 +31,9 @@
 	"message.tleveling.heroic": "You and your %s are living legends! %s",
 	"message.tleveling.legendary": "No god could stand in the way of you and your %s! %s",
 	"message.tleveling.godlike": "Your %s is pure awesome. %s",
-	"message.tleveling.awesome": "Your %s has reached MAXIMUM POWER!! %s",
+	"message.tleveling.awesome": "Your %s has reached the apex of skill! %s",
+	"message.tleveling.transcendent": "Your %s transcends all known arts!! %s",
+	"message.tleveling.maxlevel": "Your %s has reached MAXIMUM POWER!! %s",
 
 	"message.tleveling.worldbound": "You feel your tool become strangely solid... (+1 worldbound)",
 	"message.tleveling.magnetic": "You feel your tool pull you closer... (+1 magnetic)",

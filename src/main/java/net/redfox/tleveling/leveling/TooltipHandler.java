@@ -48,7 +48,7 @@ public class TooltipHandler {
 		event.getToolTip().clear();
 		event.getToolTip().add(itemName);
 		double currentExp = stack.getOrCreateTag().getDouble("toolExp");
-		ToolLevel level = ToolLevel.TOOL_LEVELS[stack.getOrCreateTag().getInt("toolLevel")];
+		ToolLevel level = ToolLevel.getToolLevel(stack.getOrCreateTag().getInt("toolLevel"));
 		int requiredExp = MathHandler.getRequiredExp(level.getLevel());
 		event.getToolTip().add(Component.translatable("tooltip.tleveling.tool_level", level.getName(), Component.literal("(" + level.getLevel() + ")").withStyle(s -> s.withColor(TextColor.parseColor("#555555")))));
 		event.getToolTip().add(Component.translatable("tooltip.tleveling.tool_exp", Component.literal(MathHandler.getUniformLongDecimal(MathHandler.getUniformDecimal(currentExp)) + "/" + MathHandler.getUniformLongDecimal(requiredExp)), TooltipHandler.getColorComponent(currentExp, requiredExp)));

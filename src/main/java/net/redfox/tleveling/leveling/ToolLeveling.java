@@ -1,5 +1,6 @@
 package net.redfox.tleveling.leveling;
 
+import com.google.common.collect.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -14,11 +15,10 @@ import net.redfox.tleveling.config.TinkersLevelingCommonConfigs;
 import net.redfox.tleveling.sound.ModSounds;
 import net.redfox.tleveling.util.MathHandler;
 import net.redfox.tleveling.util.ModTags;
-import org.apache.commons.lang3.ArrayUtils;
 import slimeknights.tconstruct.library.tools.SlotType;
 import slimeknights.tconstruct.library.tools.nbt.ToolStack;
 
-import java.util.Random;
+import java.util.*;
 
 public class ToolLeveling {
 	private final Player player;
@@ -33,7 +33,7 @@ public class ToolLeveling {
 		this.player = IPlayer;
 		this.stack = player.getMainHandItem();
 		this.currentExp = stack.getOrCreateTag().getDouble("toolExp");
-		this.level = ToolLevel.TOOL_LEVELS[stack.getOrCreateTag().getInt("toolLevel")];
+		this.level = ToolLevel.getToolLevel(stack.getOrCreateTag().getInt("toolLevel"));
 		this.requiredExp = MathHandler.getRequiredExp(level.getLevel());
 		toolLevelUp(levelUpModifier());
 
@@ -49,7 +49,7 @@ public class ToolLeveling {
 		}
 		this.state = IState;
 		this.currentExp = stack.getOrCreateTag().getDouble("toolExp");
-		this.level = ToolLevel.TOOL_LEVELS[stack.getOrCreateTag().getInt("toolLevel")];
+		this.level = ToolLevel.getToolLevel(stack.getOrCreateTag().getInt("toolLevel"));
 		this.requiredExp = MathHandler.getRequiredExp(level.getLevel());
 		handleMiningEvent();
 	}
@@ -64,7 +64,7 @@ public class ToolLeveling {
 		}
 		this.entity = IEntity;
 		this.currentExp = stack.getOrCreateTag().getDouble("toolExp");
-		this.level = ToolLevel.TOOL_LEVELS[stack.getOrCreateTag().getInt("toolLevel")];
+		this.level = ToolLevel.getToolLevel(stack.getOrCreateTag().getInt("toolLevel"));
 		this.requiredExp = MathHandler.getRequiredExp(level.getLevel());
 		handleAttackEvent();
 	}
@@ -80,122 +80,128 @@ public class ToolLeveling {
 		this.stack = IStack;
 		this.damageAmount = IAmount * 3;
 		this.currentExp = stack.getOrCreateTag().getDouble("toolExp");
-		this.level = ToolLevel.TOOL_LEVELS[stack.getOrCreateTag().getInt("toolLevel")];
+		this.level = ToolLevel.getToolLevel(stack.getOrCreateTag().getInt("toolLevel"));
 		this.requiredExp = MathHandler.getRequiredExp(level.getLevel());
 		handleSpecificArmorEvent();
 	}
 
 	public Modifier levelUpModifier() {
-		Modifier modifier;
+		List<Modifier> modifierList = Lists.newArrayList(Modifier.GLOBAL_MODIFIERS);
 		if (stack.is(ModTags.Items.TINKERS_MINING)) {
-			modifier = chooseModifier(Modifier.PICKAXE_MODIFIERS.toArray(new Modifier[0]));
+			modifierList.addAll(Modifier.PICKAXE_MODIFIERS);
 		} else if (stack.is(ModTags.Items.TINKERS_MELEE)) {
-			modifier = chooseModifier(ArrayUtils.addAll(Modifier.MELEE_MODIFIERS.toArray(new Modifier[0]), Modifier.BONUS_DAMAGE_MODIFIERS.toArray(new Modifier[0])));
+			modifierList.addAll(Modifier.MELEE_MODIFIERS);
+			modifierList.addAll(Modifier.BONUS_DAMAGE_MODIFIERS);
 		} else if (stack.is(ModTags.Items.TINKERS_RANGED)) {
 			if (stack.is(ModTags.Items.TINKERS_CROSSBOW)) {
-				modifier = chooseModifier(ArrayUtils.addAll(Modifier.RANGED_MODIFIERS.toArray(new Modifier[0]), ArrayUtils.addAll(Modifier.BONUS_DAMAGE_MODIFIERS.toArray(new Modifier[0]), Modifier.CROSSBOW_MODIFIERS.toArray(new Modifier[0]))));
+				modifierList.addAll(Modifier.RANGED_MODIFIERS);
+				modifierList.addAll(Modifier.BONUS_DAMAGE_MODIFIERS);
+				modifierList.addAll(Modifier.CROSSBOW_MODIFIERS);
 			} else {
-				modifier = chooseModifier(ArrayUtils.addAll(Modifier.RANGED_MODIFIERS.toArray(new Modifier[0]), ArrayUtils.addAll(Modifier.BONUS_DAMAGE_MODIFIERS.toArray(new Modifier[0]))));
+				modifierList.addAll(Modifier.RANGED_MODIFIERS);
+				modifierList.addAll(Modifier.BONUS_DAMAGE_MODIFIERS);
 			}
 		} else if (stack.is(ModTags.Items.TINKERS_ARMOR)) {
 			if (stack.is(ModTags.Items.TINKERS_HELMET)) {
-				modifier = chooseModifier(ArrayUtils.addAll(Modifier.ARMOR_MODIFIERS.toArray(new Modifier[0]), Modifier.HELMET_MODIFIERS.toArray(new Modifier[0])));
+				modifierList.addAll(Modifier.ARMOR_MODIFIERS);
+				modifierList.addAll(Modifier.HELMET_MODIFIERS);
 			} else if (stack.is(ModTags.Items.TINKERS_CHESTPLATE)) {
-				modifier = chooseModifier(ArrayUtils.addAll(Modifier.ARMOR_MODIFIERS.toArray(new Modifier[0]), Modifier.CHESTPLATE_MODIFIERS.toArray(new Modifier[0])));
+				modifierList.addAll(Modifier.ARMOR_MODIFIERS);
+				modifierList.addAll(Modifier.CHESTPLATE_MODIFIERS);
 			} else if (stack.is(ModTags.Items.TINKERS_LEGGINGS)) {
-				modifier = chooseModifier(ArrayUtils.addAll(Modifier.ARMOR_MODIFIERS.toArray(new Modifier[0]), Modifier.LEGGINGS_MODIFIERS.toArray(new Modifier[0])));
+				modifierList.addAll(Modifier.ARMOR_MODIFIERS);
+				modifierList.addAll(Modifier.LEGGINGS_MODIFIERS);
 			} else if (stack.is(ModTags.Items.TINKERS_BOOTS)) {
-				modifier = chooseModifier(ArrayUtils.addAll(Modifier.ARMOR_MODIFIERS.toArray(new Modifier[0]), Modifier.BOOTS_MODIFIERS.toArray(new Modifier[0])));
-			} else {
-				modifier = chooseModifier(new Modifier[]{});
+				modifierList.addAll(Modifier.ARMOR_MODIFIERS);
+				modifierList.addAll(Modifier.BOOTS_MODIFIERS);
 			}
 		} else {
-			modifier = chooseModifier(new Modifier[]{});
 			TinkersLeveling.warnLog("A tool isn't in any tag! " + stack.getDisplayName().getString());
 		}
-		if (modifier == null) {
-			return null;
-		}
-		upgradeModifier(stack, modifier);
-		return modifier;
+		return upgradeModifier(stack, modifierList);
 	}
+
 	public void setBonusModifiers(ItemStack stack, int input) {
 		ToolStack tool = ToolStack.from(stack);
 		tool.getPersistentData().setSlots(SlotType.UPGRADE, input);
 	}
+
 	public int getBonusModifiers(ItemStack stack) {
 		ToolStack tool = ToolStack.from(stack);
 		return tool.getPersistentData().getSlots(SlotType.UPGRADE);
 	}
-	private Modifier chooseModifier(Modifier[] specificModifiers) {
-		Modifier[] modifiers = ArrayUtils.addAll(specificModifiers, Modifier.GLOBAL_MODIFIERS.toArray(new Modifier[0]));
-		Random random = new Random();
-		if (modifiers.length == 0) {
-			return null;
-		}
-		return modifiers[random.nextInt(modifiers.length)];
-	}
 
-	private void upgradeModifier(ItemStack stack, Modifier modifier) {
+	private Modifier upgradeModifier(ItemStack stack, List<Modifier> availableModifierList) {
 		CompoundTag nbt = stack.getOrCreateTag();
 		ListTag ticUpgrades = nbt.contains("tic_upgrades", Tag.TAG_LIST) ? nbt.getList("tic_upgrades", Tag.TAG_COMPOUND) : new ListTag();
-		if (hasPreviousModifier(stack, modifier)) {
-			for (int i = 0; i < ticUpgrades.size(); i++) {
-				CompoundTag entry = ticUpgrades.getCompound(i);
-				if (entry.getString("name").equals("tconstruct:" + modifier.getName())) {
-					int level = entry.getInt("level");
-					if (level == modifier.getMax()) {
-						levelUpModifier();
-					} else {
-						entry.putInt("level", level+1);
-						ticUpgrades.set(i, entry);
-						nbt.put("tic_upgrades", ticUpgrades);
-						stack.setTag(nbt);
-					}
+
+		Collections.shuffle(availableModifierList);
+
+		while(!availableModifierList.isEmpty()) {
+			Modifier modifier = availableModifierList.remove(0);
+			int idx = findModifierTag(ticUpgrades, modifier);
+            if (idx >= 0) {
+                CompoundTag modifierTag = ticUpgrades.getCompound(idx);
+                int level = modifierTag.getInt("level");
+				if (level < modifier.getMax()) {
+					modifierTag.putInt("level", level + 1);
+					ticUpgrades.set(idx, modifierTag);
+					nbt.put("tic_upgrades", ticUpgrades);
+					stack.setTag(nbt);
+					return modifier;
 				}
+			} else {
+				CompoundTag modifierUpgrade = getModifierUpgrade(modifier, 1);
+				ticUpgrades.add(modifierUpgrade);
+				nbt.put("tic_upgrades", ticUpgrades);
+				stack.setTag(nbt);
+				return modifier;
 			}
-		} else {
-			CompoundTag modifierUpgrade = getModifierUpgrade(modifier, 1);
-			ticUpgrades.add(modifierUpgrade);
-			nbt.put("tic_upgrades", ticUpgrades);
-			stack.setTag(nbt);
 		}
+
+		return null;
 	}
-	private boolean hasPreviousModifier(ItemStack stack, Modifier modifier) {
-		boolean contains = false;
+
+	private int findModifierTag(ListTag ticUpgrades, Modifier modifier) {
 		for (int i = 1; i <= modifier.getMax(); i++) {
-			contains = stack.getOrCreateTag().getList("tic_upgrades", Tag.TAG_COMPOUND).contains(getModifierUpgrade(modifier, i));
-			if (contains) {
-				break;
+			CompoundTag compoundTag = getModifierUpgrade(modifier, i);
+			int idx = ticUpgrades.indexOf(compoundTag);
+			if (idx >= 0) {
+				return idx;
 			}
 		}
-		return contains;
+		return -1;
 	}
+
 	private CompoundTag getModifierUpgrade(Modifier modifier, int level) {
 		CompoundTag modifierUpgrade = new CompoundTag();
 		modifierUpgrade.putString("name", "tconstruct:" + modifier.getName());
 		modifierUpgrade.putInt("level", level);
 		return modifierUpgrade;
 	}
+
 	public void toolLevelUp(Modifier modifier) {
+		int newLevel = level.getLevel() + 1;
 		stack.getOrCreateTag().putDouble("toolExp", currentExp-requiredExp);
-		stack.getOrCreateTag().putInt("toolLevel", level.getLevel()+1);
+		stack.getOrCreateTag().putInt("toolLevel", newLevel);
 		int levelGap = TinkersLevelingCommonConfigs.LEVEL_BONUS_MODIFIER.get();
-		if (levelGap > 0 && levelGap <= 11) {
-			if ((level.getLevel() + levelGap) % levelGap == 0) {
+		if (levelGap > 0) {
+			if (newLevel > 0 && (newLevel + levelGap) % levelGap == 0) {
 				setBonusModifiers(stack, getBonusModifiers(stack)+1);
 				player.sendSystemMessage(level.getMessage(stack.getDisplayName(), true));
 			} else {
 				player.sendSystemMessage(level.getMessage(stack.getDisplayName(), false));
 			}
 		}
-		player.sendSystemMessage(modifier.getMessage());
+		if(modifier != null){
+			player.sendSystemMessage(modifier.getMessage());
+		}
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.LEVEL_CHIME.get(), SoundSource.MASTER, 1f, 1f);
-		if (currentExp - requiredExp > MathHandler.getRequiredExp(level.getLevel()+1)) {
+		if (currentExp - requiredExp > MathHandler.getRequiredExp(newLevel) && !ToolLevel.getToolLevel(newLevel).isMaxLevel()) {
 			new ToolLeveling(this.player);
 		}
 	}
-	
+
 	public void handleMiningEvent() {
 		currentExp = getExpFromBlockState(this.state) + currentExp;
 		this.stack.getOrCreateTag().putDouble("toolExp", currentExp);

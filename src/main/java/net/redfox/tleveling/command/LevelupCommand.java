@@ -28,11 +28,11 @@ public class LevelupCommand {
 			source.sendFailure(Component.literal("This item cannot level up!"));
 			return -1;
 		}
-		if (ToolLevel.TOOL_LEVELS[stack.getOrCreateTag().getInt("toolLevel")].isMaxLevel()) {
+		ToolLevel level = ToolLevel.getToolLevel(stack.getOrCreateTag().getInt("toolLevel"));
+		if (level.isMaxLevel()) {
 			source.sendFailure(Component.literal("This item has reached the maximum level!"));
 			return -1;
 		}
-		ToolLevel level = ToolLevel.TOOL_LEVELS[stack.getOrCreateTag().getInt("toolLevel")];
 		int requiredExp = MathHandler.getRequiredExp(level.getLevel());
 		stack.getOrCreateTag().putDouble("toolExp", requiredExp);
 		new ToolLeveling(source.getPlayer());

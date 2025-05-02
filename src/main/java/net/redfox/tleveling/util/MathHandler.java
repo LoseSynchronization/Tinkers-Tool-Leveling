@@ -7,7 +7,9 @@ import java.text.DecimalFormat;
 public class MathHandler {
 	public static final DecimalFormat formatter = new DecimalFormat("#,###.##");
 	public static int getRequiredExp(int level) {
-		return MathHandler.round(Math.pow(2.5f, level) * TinkersLevelingCommonConfigs.LEVELUP_EXP_REQUIRED.get());
+		Double expMultiplier = TinkersLevelingCommonConfigs.LEVELUP_EXP_MULTIPLIER.get();
+		Integer expRequired = TinkersLevelingCommonConfigs.LEVELUP_EXP_REQUIRED.get();
+		return MathHandler.round(Math.pow(expMultiplier, level) * expRequired);
 	}
 	public static int round(double input) {
 		return (int)Math.round(input);

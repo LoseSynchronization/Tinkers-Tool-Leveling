@@ -1,6 +1,10 @@
 package net.redfox.tleveling.leveling;
 
+import com.google.common.collect.*;
 import net.minecraft.network.chat.Component;
+import net.redfox.tleveling.config.*;
+
+import java.util.*;
 
 public class ToolLevel {
 	public static final ToolLevel LIKE_NEW = new ToolLevel(0, "Like New", "like_new");
@@ -16,8 +20,9 @@ public class ToolLevel {
 	public static final ToolLevel GODLIKE = new ToolLevel(10, "Godlike", "godlike");
 	public static final ToolLevel AWESOME = new ToolLevel(11, "Awesome", "awesome");
 
+	public static final String TOOL_LEVEL_NAME_BEYOND = "Transcendent";
 
-	public static final ToolLevel[] TOOL_LEVELS = new ToolLevel[]{LIKE_NEW, CLUMSY, COMFORTABLE, ACCUSTOMED, ADEPT, EXPERT, MASTER, GRANDMASTER, HEROIC, LEGENDARY, GODLIKE, AWESOME};
+	private static final List<ToolLevel> TOOL_LEVEL_LIST = Lists.newArrayList(LIKE_NEW, CLUMSY, COMFORTABLE, ACCUSTOMED, ADEPT, EXPERT, MASTER, GRANDMASTER, HEROIC, LEGENDARY, GODLIKE, AWESOME);
 
 	private final int level;
 	private final String name;
@@ -31,10 +36,16 @@ public class ToolLevel {
 		return this.level;
 	}
 	public Component getMessage(Component toolName, boolean bonusModifier) {
-		if (bonusModifier) {
-			return Component.translatable("message.tleveling."+id, Component.literal(toolName.getString().replace("[", "").replace("]", "")).withStyle(s -> s.withColor(TooltipHandler.BLUE)), Component.literal("(+1 modifier)")).withStyle(s -> s.withColor(TooltipHandler.BLUE));
+		String id = this.getId();
+		if(isMaxLevel() || getToolLevel(this.getLevel() + 1).isMaxLevel()){
+			id = "maxlevel";
 		}
-		return Component.translatable("message.tleveling."+id, Component.literal(toolName.getString().replace("[", "").replace("]", ""))).withStyle(s -> s.withColor(TooltipHandler.BLUE));
+		Component toolNameLiteral = Component.literal(toolName.getString().replace("[", "").replace("]", "")).withStyle(s->s.withColor(TooltipHandler.ORANGE));
+		Component bonusModifierLiteral =Component.literal("");
+		if (bonusModifier){
+			bonusModifierLiteral = Component.literal("(+1 modifier)");
+		}
+		return Component.translatable("message.tleveling."+id, toolNameLiteral, bonusModifierLiteral).withStyle(s -> s.withColor(TooltipHandler.BLUE));
 	}
 	public String getName() {
 		return this.name;
@@ -43,6 +54,16 @@ public class ToolLevel {
 		return this.id;
 	}
 	public boolean isMaxLevel() {
-		return this.level == 11;
+		return this.level >= TinkersLevelingCommonConfigs.MAX_LEVEL.get();
+	}
+
+	public static ToolLevel getToolLevel(int level){
+		if (level < TOOL_LEVEL_LIST.size()){
+			return TOOL_LEVEL_LIST.get(level);
+		}else{
+			ToolLevel newLevel = new ToolLevel(level, TOOL_LEVEL_NAME_BEYOND, TOOL_LEVEL_NAME_BEYOND.toLowerCase());
+			TOOL_LEVEL_LIST.add(newLevel);
+			return newLevel;
+		}
 	}
 }
